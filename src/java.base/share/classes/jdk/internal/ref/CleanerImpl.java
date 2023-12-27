@@ -112,6 +112,16 @@ public final class CleanerImpl implements Runnable {
         thread.start();
     }
 
+/*[IF CRIU_SUPPORT]*/
+    private int getSizeOfPhantomCleanableList() {
+        int size = 0;
+        for (PhantomCleanable<?> r = phantomCleanableList; r != null; r = r.next) {
+            size++;
+        }
+        return size;
+    }
+/*[ENDIF] CRIU_SUPPORT */
+
     /**
      * Process queued Cleanables as long as the cleanable lists are not empty.
      * A Cleanable is in one of the lists for each Object and for the Cleaner
@@ -129,15 +139,27 @@ public final class CleanerImpl implements Runnable {
         InnocuousThread mlThread = (t instanceof InnocuousThread)
                 ? (InnocuousThread) t
                 : null;
+/*[IF CRIU_SUPPORT]*/
+        long startTime = System.currentTimeMillis();
+/*[ENDIF] CRIU_SUPPORT */
         while (!phantomCleanableList.isListEmpty()) {
             if (mlThread != null) {
                 // Clear the thread locals
                 mlThread.eraseThreadLocals();
             }
+/*[IF CRIU_SUPPORT]*/
+            System.out.println("Size of phantomCleanableList: " + getSizeOfPhantomCleanableList());
+/*[ENDIF] CRIU_SUPPORT */
             try {
+/*[IF CRIU_SUPPORT]*/
+                long removeStartTime = System.currentTimeMillis();
+/*[ENDIF] CRIU_SUPPORT */
                 // Wait for a Ref, with a timeout to avoid getting hung
                 // due to a race with clear/clean
                 Cleanable ref = (Cleanable) queue.remove(60 * 1000L);
+/*[IF CRIU_SUPPORT]*/
+                System.out.println("Time taken for queue.remove: " + (System.currentTimeMillis() - removeStartTime) + " milliseconds");
+/*[ENDIF] CRIU_SUPPORT */
                 if (ref != null) {
                     ref.clean();
                 }
@@ -146,6 +168,9 @@ public final class CleanerImpl implements Runnable {
                 // (including interruption of cleanup thread)
             }
         }
+/*[IF CRIU_SUPPORT]*/
+        System.out.println("Runtime of CleanerImpl.run(): " + (System.currentTimeMillis() - startTime) + " milliseconds");
+/*[ENDIF] CRIU_SUPPORT */
     }
 
     /**
