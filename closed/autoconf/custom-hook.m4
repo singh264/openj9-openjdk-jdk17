@@ -354,15 +354,7 @@ AC_DEFUN([OPENJ9_CONFIGURE_CRAC_SUPPORT],
   elif test "x$enable_crac_support" = xno ; then
     AC_MSG_RESULT([no (explicitly disabled)])
   elif test "x$enable_crac_support" = x ; then
-    case "$OPENJ9_PLATFORM_CODE" in
-      xa64)
-        AC_MSG_RESULT([yes (default)])
-        OPENJ9_ENABLE_CRAC_SUPPORT=true
-        ;;
-      *)
-        AC_MSG_RESULT([no (default)])
-        ;;
-    esac
+    AC_MSG_RESULT([no (default)])
   else
     AC_MSG_ERROR([--enable-crac-support accepts no argument])
   fi
@@ -381,18 +373,15 @@ AC_DEFUN([OPENJ9_CONFIGURE_CRIU_SUPPORT],
   elif test "x$enable_criu_support" = xno ; then
     AC_MSG_RESULT([no (explicitly disabled)])
   elif test "x$enable_criu_support" = x ; then
-    case "$OPENJ9_PLATFORM_CODE" in
-      xa64|xl64|xr64|xz64)
-        AC_MSG_RESULT([yes (default)])
-        OPENJ9_ENABLE_CRIU_SUPPORT=true
-        ;;
-      *)
-        AC_MSG_RESULT([no (default)])
-        ;;
-    esac
+    AC_MSG_RESULT([no (default)])
   else
     AC_MSG_ERROR([--enable-criu-support accepts no argument])
   fi
+
+  if test "$OPENJ9_ENABLE_CRIU_SUPPORT" = "false" && test "$OPENJ9_ENABLE_CRAC_SUPPORT" = "true"; then
+    AC_MSG_ERROR([CRaC support requires CRIU support to be enabled with --enable-criu-support])
+  fi
+
   AC_SUBST(OPENJ9_ENABLE_CRIU_SUPPORT)
 ])
 
